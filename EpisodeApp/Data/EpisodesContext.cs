@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using EpisodeApp;
+using Microsoft.Data.SqlClient;
 
 public class EpisodesContext : DbContext
 {

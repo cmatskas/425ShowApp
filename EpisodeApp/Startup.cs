@@ -43,7 +43,10 @@ namespace EpisodeApp
             });
 
             services.AddDbContext<EpisodesContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("EpisodesContext")));
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("EpisodesContext"));
+                options.AddInterceptors(new AzureAdAuthenticationDbConnectionInterceptor());
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
