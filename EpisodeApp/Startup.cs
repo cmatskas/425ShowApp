@@ -41,9 +41,9 @@ namespace EpisodeApp
                     .RequireAuthenticatedUser()
                     .Build();
             });
-
+            var connString = Configuration.GetConnectionString("EpisodesContext");
             services.AddDbContext<EpisodesContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("EpisodesContext")));
+                    options.UseSqlServer(connString));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
