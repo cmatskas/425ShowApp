@@ -1,14 +1,14 @@
 ﻿using EpisodeApp.Data;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace EpisodeApp
 {
@@ -24,30 +24,26 @@ namespace EpisodeApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+            services.Configure<MicrosoftIdentityOptions>(options => {
+                options.ResponseType = OpenIdConnectResponseType.Code;
+            });
+            services.AddMicrosoftIdentityWebAppAuthentication(Configuration);
             services.AddDatabaseDeveloperPageExceptionFilter();
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
-            services.AddRazorPages();
             services.AddAuthorization(options =>
             {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
+                options.FallbackPolicy = options.DefaultPolicy;
             });
+            services.AddRazorPages()
+                .AddMvcOptions(options => {})
+                .AddMicrosoftIdentityUI();
 
             services.AddDbContext<EpisodesContext>(options =>
             {
-                
-                var connectionString1 = @"Server=cmsqlserver20200702.database.windows.net;Authentication=Active Directory Device Code Flow; Database=425ShowEpisodes";
-                //var connectionString2 = @"Server=cmsqlserver20200702.database.windows.net;Authentication=Active Directory Service Principal; Database = 425ShowEpisodes; User Id = 6162c2b9-e337-4c83-b86a-94576f303368; Password = DbmXUw6lSLE6Ib6-g.X0~cw.vJ_q1WVT~r";
-                //Configuration.GetConnectionString("EpisodesContext");
-                SqlAuthenticationProvider.SetProvider(SqlAuthenticationMethod.ActiveDirectoryDeviceCodeFlow, new CustomAzureSQLAuthProvider());
-                var sqlConnection = new SqlConnection(connectionString1);
+                SqlAuthenticationProvider.SetProvider(
+                    SqlAuthenticationMethod.ActiveDirectoryDeviceCodeFlow, 
+                    new CustomAzureSQLAuthProvider());
+                var sqlConnection = new SqlConnection(Configuration.GetConnectionString("EpisodesContext"));
                 options.UseSqlServer(sqlConnection);
-                //options.AddInterceptors(new AzureAdAuthenticationDbConnectionInterceptor());
             });
         }
 
@@ -73,7 +69,7 @@ namespace EpisodeApp
 
             app.UseAuthentication();
             app.UseAuthorization();
-
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
