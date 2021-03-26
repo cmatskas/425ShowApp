@@ -11,13 +11,11 @@ namespace EpisodeApp.Data
     {
         private static readonly string[] _azureSqlScopes = new[]
         {
-            "https://database.windows.net//.default"
+            "https://database.windows.net/.default"
         };
 
         private static readonly TokenCredential _credential = new DefaultAzureCredential();
-            /*new ChainedTokenCredential(
-            new ManagedIdentityCredential(),
-            new VisualStudioCredential());*/
+        
         public override Task<SqlAuthenticationToken> AcquireTokenAsync(SqlAuthenticationParameters parameters)
         {
             var tokenRequestContext = new TokenRequestContext(_azureSqlScopes);
