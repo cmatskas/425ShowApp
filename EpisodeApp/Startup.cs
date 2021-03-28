@@ -2,17 +2,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace EpisodeApp
 {
@@ -28,13 +25,14 @@ namespace EpisodeApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+            services.Configure<MicrosoftIdentityOptions>(options => {
+                options.ResponseType = OpenIdConnectResponseType.Code;
+            });
+            services.AddMicrosoftIdentityWebAppAuthentication(Configuration);
             services.AddDatabaseDeveloperPageExceptionFilter();
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
-            services.AddRazorPages();
+            services.AddRazorPages()
+                    .AddMvcOptions(options => {})
+                    .AddMicrosoftIdentityUI();
             services.AddAuthorization(options =>
             {
                 options.FallbackPolicy = new AuthorizationPolicyBuilder()
@@ -44,8 +42,11 @@ namespace EpisodeApp
 
             services.AddDbContext<EpisodesContext>(options =>
             {
-                options.UseSqlServer(Configuration.GetConnectionString("EpisodesContext"));
-                options.AddInterceptors(new AzureAdAuthenticationDbConnectionInterceptor());
+                SqlAuthenticationProvider.SetProvider(
+                    SqlAuthenticationMethod.ActiveDirectoryDeviceCodeFlow,
+                    new CustomAzureSQLAuthProvider());
+                var sqlConnection = new SqlConnection(Configuration.GetConnectionString("EpisodesContext"));
+                options.UseSqlServer(sqlConnection);
             });
         }
 
