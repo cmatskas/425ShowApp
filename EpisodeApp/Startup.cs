@@ -39,9 +39,6 @@ namespace EpisodeApp
 
             services.AddDbContext<EpisodesContext>(options =>
             {
-                SqlAuthenticationProvider.SetProvider(
-                    SqlAuthenticationMethod.ActiveDirectoryDeviceCodeFlow, 
-                    new CustomAzureSQLAuthProvider());
                 var sqlConnection = new SqlConnection(Configuration.GetConnectionString("EpisodesContext"));
                 options.UseSqlServer(sqlConnection);
             });
